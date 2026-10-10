@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
-from backend.schemas import NormalizedEvent, EventType, Severity
-from backend.detection import detect_brute_force
+from schemas import NormalizedEvent, EventType, Severity
+from detection import detect_brute_force
 
 def create_event(ip, event_type, minutes_offset):
     return NormalizedEvent(
@@ -18,7 +18,6 @@ def test_no_brute_force_on_normal_login():
     assert len(alerts) == 0
 
 def test_brute_force_threshold_boundary():
-    # Exactly 5 failures in 5 minutes should trigger
     events = [create_event("203.0.113.25", EventType.LOGIN_FAILURE, i) for i in range(5)]
     alerts = detect_brute_force(events)
     assert len(alerts) == 1
@@ -26,19 +25,17 @@ def test_brute_force_threshold_boundary():
     assert alerts[0].severity == Severity.MEDIUM
 
 def test_time_window_boundary():
-    # 5 failures, but spaced out so only 4 fall in a 5-min window
     events = [
         create_event("203.0.113.25", EventType.LOGIN_FAILURE, 0),
         create_event("203.0.113.25", EventType.LOGIN_FAILURE, 1),
         create_event("203.0.113.25", EventType.LOGIN_FAILURE, 2),
         create_event("203.0.113.25", EventType.LOGIN_FAILURE, 3),
-        create_event("203.0.113.25", EventType.LOGIN_FAILURE, 10), # Outside window
+        create_event("203.0.113.25", EventType.LOGIN_FAILURE, 10),
     ]
     alerts = detect_brute_force(events)
     assert len(alerts) == 0
 
 def test_different_ips_not_combined():
-    # 3 failures from IP A, 3 from IP B. Neither should trigger.
     events = [create_event("1.1.1.1", EventType.LOGIN_FAILURE, i) for i in range(3)]
     events += [create_event("2.2.2.2", EventType.LOGIN_FAILURE, i) for i in range(3)]
     alerts = detect_brute_force(events)

@@ -1,253 +1,89 @@
-"""AI SOC Copilot — Streamlit Dashboard (Member 4, Ocean Edition)"""
-
-import os
 import streamlit as st
-from dotenv import load_dotenv
+import api_client
+from components import render_metrics, render_alert_card
+from mock_data import MOCK_ALERTS
 
-from api_client import (
-    get_health,
-    get_alerts,
-    parse_logs,
-    run_detection,
-    analyze_alert,
-    update_alert_status,
-    get_historical_trends,
-)
-from components import (
-    inject_glass_css,
-    render_topbar,
-    render_stats,
-    render_severity_charts,
-    render_alert_table,
-    render_risk_indicator,
-    render_ai_block,
-    render_sidebar_metrics,
-    render_historical_trends,
-    render_voice_briefing,
-    render_export_report,
-    severity_badge,
-)
-
-load_dotenv()
-USE_MOCK = os.getenv("USE_MOCK", "true").lower() == "true"
-
-# ---------------- Page config ----------------
 st.set_page_config(
-    page_title="AI SOC Copilot",
+    page_title="SledgeAuth - SOC Copilot",
     page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded",
+    layout="wide"
 )
 
-inject_glass_css()
+st.title("🛡️ SledgeAuth - AI Security SOC Copilot")
+st.markdown("Upload Linux authentication logs to detect threats, assess risk, and get AI-powered investigation guidance.")
 
-# ---------------- Session state ----------------
-if "health" not in st.session_state:
-    st.session_state.health = get_health()
+# Initialize session state
 if "alerts" not in st.session_state:
-    alerts, err = get_alerts()
-    st.session_state.alerts = alerts
-    st.session_state.alerts_error = err
-if "selected" not in st.session_state:
-    st.session_state.selected = None
-if "ai_result" not in st.session_state:
-    st.session_state.ai_result = None
-if "ai_error" not in st.session_state:
-    st.session_state.ai_error = None
+    st.session_state.alerts = []
+if "using_mock" not in st.session_state:
+    st.session_state.using_mock = False
 
-# ---------------- Sidebar ----------------
+# Sidebar - Log Ingestion
 with st.sidebar:
-    render_sidebar_metrics(st.session_state.alerts or [])
-    st.divider()
-
-    st.markdown("### Navigation")
-    page = st.radio(
-        "Go to",
-        ["Dashboard", "Upload Logs"],
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-    st.markdown("### Quick Actions")
-    if st.button("🔄 Refresh Alerts", use_container_width=True):
-        alerts, err = get_alerts()
-        st.session_state.alerts = alerts
-        st.session_state.alerts_error = err
-        st.session_state.selected = None
-        st.session_state.ai_result = None
-        st.session_state.ai_error = None
-        st.rerun()
-
-    st.divider()
-    st.caption(f"API: {os.getenv('API_BASE_URL', 'http://localhost:8000')}")
-    st.caption(f"Mock mode: {'ON' if USE_MOCK else 'OFF'}")
-
-# ---------------- Header ----------------
-render_topbar(USE_MOCK)
-st.divider()
-
-
-# ============================================================
-# PAGE: DASHBOARD
-# ============================================================
-if page == "Dashboard":
-    alerts = st.session_state.alerts or []
-    err = st.session_state.get("alerts_error")
-
-    if err:
-        st.error(f"Failed to load alerts: {err}")
-
-    # ---- Row 1: Stats ----
-    render_stats(alerts)
-
-    # ---- Row 2: Historical Trends (full width) ----
-    trends, trends_err = get_historical_trends()
-    if trends:
-        render_historical_trends(trends)
-    elif trends_err:
-        st.warning(f"Could not load trends: {trends_err}")
-
-    # ---- Row 3: Severity charts (pie + bar, side-by-side) ----
-    render_severity_charts(alerts)
-
-    # ---- Row 4: Alerts table (full width) ----
-    st.markdown("### Alerts")
-    selected = render_alert_table(alerts)
-    if selected:
-        st.session_state.selected = selected
-        st.session_state.ai_result = None
-        st.session_state.ai_error = None
-
-    # ---- Row 5: Alert Details (full width, appears after click) ----
-    alert = st.session_state.selected
-
-    if alert:
-        st.markdown("---")
-        st.markdown("### 🔍 Alert Details")
-
-        st.markdown(
-            f"<div class='glass-card'>"
-            f"<h4 style='margin-top:0;'>{alert.get('rule_name')}</h4>"
-            f"<div style='display:flex;flex-wrap:wrap;gap:14px;"
-            f"font-size:13px;color:#0c4a6e;margin:10px 0;align-items:center;'>"
-            f"{severity_badge(alert.get('severity', 'Unknown'))}"
-            f"<span>Host: <b>{alert.get('host') or '—'}</b></span>"
-            f"<span>Source IP: <b>{alert.get('source_ip') or '—'}</b></span>"
-            f"<span>User: <b>{alert.get('username') or '—'}</b></span>"
-            f"<span>Events: <b>{alert.get('event_count')}</b></span>"
-            f"<span>Window: <b>{alert.get('time_window_seconds')}s</b></span>"
-            f"</div>"
-            f"<div style='color:#0e7490;font-size:12px;'>"
-            f"{alert.get('first_seen')} → {alert.get('last_seen')}"
-            f"</div></div>",
-            unsafe_allow_html=True,
-        )
-
-        render_risk_indicator(
-            alert.get("risk_score"), alert.get("severity")
-        )
-
-        # --- Three columns: Evidence | AI | Voice + Export ---
-        det_left, det_mid, det_right = st.columns([1, 1, 1], gap="large")
-
-        with det_left:
-            with st.expander(
-                f"Evidence ({len(alert.get('evidence', []))})", expanded=True
-            ):
-                for e in alert.get("evidence", []):
-                    st.markdown(
-                        f"- `{e.get('timestamp')}` — {e.get('message')}"
-                    )
-
-            st.markdown("**Analyst Status** *(manual decision)*")
-            current = alert.get("status", "Open")
-            options = ["Open", "Investigating", "Escalated", "Closed"]
-            new_status = st.selectbox(
-                "Status",
-                options,
-                index=options.index(current) if current in options else 0,
-                key=f"status_{alert.get('alert_id')}",
-                label_visibility="collapsed",
-            )
-            if new_status != current:
-                if st.button("Save Status"):
-                    _, err2 = update_alert_status(
-                        alert.get("alert_id"), new_status
-                    )
-                    if err2:
-                        st.error(f"Failed: {err2}")
-                    else:
-                        for a in st.session_state.alerts:
-                            if a.get("alert_id") == alert.get("alert_id"):
-                                a["status"] = new_status
-                        st.session_state.selected["status"] = new_status
-                        st.success(f"Status → {new_status}")
-                        st.rerun()
-
-        with det_mid:
-            st.markdown("**AI Investigation Guidance**")
-            if st.button("🤖 Run AI Analysis", use_container_width=True):
-                with st.spinner("Analyzing..."):
-                    result, err3 = analyze_alert(alert)
-                    st.session_state.ai_result = result
-                    st.session_state.ai_error = err3
-
-            is_fallback = (
-                st.session_state.ai_result
-                and st.session_state.ai_result.get("ai_fallback") is True
-            )
-            render_ai_block(
-                st.session_state.ai_result,
-                st.session_state.ai_error,
-                is_fallback,
-            )
-
-        with det_right:
-            render_voice_briefing(alert, st.session_state.ai_result)
-            st.divider()
-            render_export_report(alert, st.session_state.ai_result)
-
+    st.header("📂 Log Ingestion")
+    
+    upload_option = st.radio("Choose input method:", ["Upload File", "Paste Text"])
+    
+    log_content = ""
+    if upload_option == "Upload File":
+        uploaded_file = st.file_uploader("Choose a .log file", type=["log"])
+        if uploaded_file is not None:
+            log_content = uploaded_file.getvalue().decode("utf-8")
     else:
-        st.info("👆 Select an alert from the table above to view details.")
+        log_content = st.text_area("Paste log content here:", height=200)
+        
+    if st.button("🚀 Parse & Detect Threats", use_container_width=True):
+        if not log_content.strip():
+            st.warning("Please provide log content first.")
+        else:
+            with st.spinner("Parsing logs and running detection..."):
+                try:
+                    # 1. Parse
+                    parse_resp = api_client.parse_logs(log_content)
+                    events = parse_resp.get("events", [])
+                    st.info(f"Parsed {len(events)} events ({parse_resp.get('error_count', 0)} errors).")
+                    
+                    # 2. Detect
+                    detect_resp = api_client.detect_threats(events)
+                    new_alerts = detect_resp.get("alerts", [])
+                    st.success(f"Detection complete. Generated {len(new_alerts)} alerts.")
+                    
+                    # 3. Refresh alert list
+                    st.session_state.alerts = api_client.get_alerts().get("alerts", [])
+                    st.session_state.using_mock = False
+                    
+                except ConnectionError as e:
+                    st.error(f"Backend connection failed: {e}")
+                    st.warning("⚠️ Falling back to mock data for demonstration.")
+                    st.session_state.alerts = MOCK_ALERTS["alerts"]
+                    st.session_state.using_mock = True
 
+# Main Dashboard Area
+if st.session_state.using_mock:
+    st.warning("⚠️ **DEMO MODE:** Backend is unavailable. Displaying mock data.")
+    
+# Try to fetch latest alerts on load if session is empty
+if not st.session_state.alerts:
+    live_alerts = api_client.get_alerts()
+    if live_alerts:
+        st.session_state.alerts = live_alerts.get("alerts", [])
+    else:
+        st.session_state.alerts = MOCK_ALERTS["alerts"]
+        st.session_state.using_mock = True
 
-# ============================================================
-# PAGE: UPLOAD LOGS
-# ============================================================
-elif page == "Upload Logs":
-    st.markdown("### Upload Logs & Run Detection")
+# Render Metrics
+st.markdown("---")
+render_metrics(st.session_state.alerts)
+st.markdown("---")
 
-    uploaded = st.file_uploader(
-        "Choose a .log or .txt file", type=["log", "txt"]
-    )
-
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button(
-            "Parse Logs", disabled=uploaded is None, use_container_width=True
-        ):
-            if uploaded:
-                with st.spinner("Parsing..."):
-                    result, err = parse_logs(uploaded)
-                if err:
-                    st.error(f"Parse failed: {err}")
-                else:
-                    count = (
-                        len(result.get("parsed_events", [])) if result else 0
-                    )
-                    st.success(f"Parsed {count} events.")
-
-    with c2:
-        if st.button("Run Detection", use_container_width=True):
-            with st.spinner("Detecting..."):
-                result, err = run_detection()
-            if err:
-                st.error(f"Detection failed: {err}")
-            else:
-                alerts = result.get("alerts", []) if result else []
-                st.session_state.alerts = alerts
-                st.session_state.selected = None
-                st.session_state.ai_result = None
-                st.session_state.ai_error = None
-                st.success(f"Detection produced {len(alerts)} alerts.")
-                st.rerun()
+# Render Alerts
+st.subheader("🚨 Active Alerts")
+if not st.session_state.alerts:
+    st.info("No alerts found. Upload a suspicious log to begin.")
+else:
+    for alert in st.session_state.alerts:
+        render_alert_card(alert, api_client)
+        
+# Footer
+st.markdown("---")
+st.caption("SledgeAuth MVP | Built for InnoHacks 24-Hour Hackathon")

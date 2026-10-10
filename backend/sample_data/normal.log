@@ -1,0 +1,8 @@
+Jan 10 08:00:00 fin-ws-04 sshd[11111]: Accepted password for alice from 192.168.1.10 port 50001 ssh2
+Jan 10 08:15:00 hr-ws-11 sshd[22222]: Accepted password for bob from 192.168.1.20 port 50002 ssh2
+Jan 10 08:30:00 db-srv-02 sshd[33333]: Accepted password for postgres from 192.168.1.30 port 50003 ssh2
+Jan 10 09:00:00 fin-ws-04 sudo: alice : TTY=pts/0 ; PWD=/home/alice ; USER=root ; COMMAND=/usr/bin/apt-get update
+Jan 10 09:30:00 web-srv-01 sshd[44444]: Accepted password for deploy from 192.168.1.40 port 50004 ssh2
+Jan 10 10:00:00 fin-ws-04 sshd[55555]: Accepted password for alice from 192.168.1.10 port 50005 ssh2
+Jan 10 10:30:00 hr-ws-11 sudo: bob : TTY=pts/1 ; PWD=/home/bob ; USER=root ; COMMAND=/usr/bin/systemctl restart apache2
+Jan 10 11:00:00 db-srv-02 sshd[66666]: Accepted password for postgres from 192.168.1.30 port 50006 ssh2

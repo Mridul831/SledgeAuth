@@ -1,0 +1,67 @@
+Jan 10 09:12:00 fin-ws-04 sshd[12345]: Failed password for root from 203.0.113.42 port 54321 ssh2
+Jan 10 09:12:45 fin-ws-04 sshd[12345]: Failed password for root from 203.0.113.42 port 54322 ssh2
+Jan 10 09:13:30 fin-ws-04 sshd[12345]: Failed password for root from 203.0.113.42 port 54323 ssh2
+Jan 10 09:14:10 fin-ws-04 sshd[12345]: Failed password for root from 203.0.113.42 port 54324 ssh2
+Jan 10 09:15:05 fin-ws-04 sshd[12345]: Failed password for root from 203.0.113.42 port 54325 ssh2
+Jan 10 09:16:00 fin-ws-04 sshd[12345]: Failed password for root from 203.0.113.42 port 54326 ssh2
+Jan 10 09:16:30 fin-ws-04 sshd[12345]: Failed password for root from 203.0.113.42 port 54327 ssh2
+Jan 10 09:18:00 fin-ws-04 sshd[12346]: Accepted password for admin from 192.168.1.100 port 54330 ssh2
+Jan 10 09:20:00 fin-ws-04 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/bin/apt-get update
+Jan 10 09:22:00 fin-ws-04 sudo: admin : TTY=pts/0 ; PWD=/home/admin ; USER=root ; COMMAND=/usr/bin/systemctl restart sshd
+Jan 10 09:25:00 fin-ws-04 usermod[12347]: add 'admin' to group 'sudo'
+Jan 10 10:01:00 hr-ws-11 sshd[23456]: Failed password for jsmith from 198.51.100.7 port 60001 ssh2
+Jan 10 10:02:00 hr-ws-11 sshd[23456]: Failed password for jsmith from 198.51.100.7 port 60002 ssh2
+Jan 10 10:03:00 hr-ws-11 sshd[23456]: Failed password for jsmith from 198.51.100.7 port 60003 ssh2
+Jan 10 10:04:00 hr-ws-11 sshd[23456]: Failed password for jsmith from 198.51.100.7 port 60004 ssh2
+Jan 10 10:05:00 hr-ws-11 sshd[23456]: Failed password for jsmith from 198.51.100.7 port 60005 ssh2
+Jan 10 10:15:00 hr-ws-11 sshd[23457]: Accepted password for jsmith from 192.168.1.105 port 60010 ssh2
+Jan 10 11:40:00 db-srv-02 sshd[34567]: Failed password for postgres from 192.0.2.99 port 45001 ssh2
+Jan 10 11:41:00 db-srv-02 sshd[34567]: Failed password for postgres from 192.0.2.99 port 45002 ssh2
+Jan 10 11:42:00 db-srv-02 sshd[34567]: Failed password for postgres from 192.0.2.99 port 45003 ssh2
+Jan 10 12:00:00 db-srv-02 sshd[34568]: Accepted password for postgres from 192.168.1.50 port 45010 ssh2
+Jan 10 14:30:00 fin-ws-04 sshd[45678]: Failed password for root from 203.0.113.99 port 55001 ssh2
+Jan 10 14:31:00 fin-ws-04 sshd[45678]: Failed password for root from 203.0.113.99 port 55002 ssh2
+Jan 10 14:32:00 fin-ws-04 sshd[45678]: Failed password for root from 203.0.113.99 port 55003 ssh2
+Jan 10 14:33:00 fin-ws-04 sshd[45678]: Failed password for root from 203.0.113.99 port 55004 ssh2
+Jan 10 14:34:00 fin-ws-04 sshd[45678]: Failed password for root from 203.0.113.99 port 55005 ssh2
+Jan 10 14:35:00 fin-ws-04 sshd[45678]: Failed password for root from 203.0.113.99 port 55006 ssh2
+Jan 10 15:00:00 web-srv-01 sshd[56789]: Accepted password for deploy from 192.168.1.200 port 45001 ssh2
+Jan 10 15:15:00 web-srv-01 sudo: deploy : TTY=pts/1 ; PWD=/var/www ; USER=root ; COMMAND=/usr/bin/systemctl restart nginx
+Jan 10 16:00:00 fin-ws-04 sshd[67890]: Failed password for invalid user oracle from 10.0.0.55 port 47001 ssh2
+Jan 10 16:01:00 fin-ws-04 sshd[67890]: Failed password for invalid user oracle from 10.0.0.55 port 47002 ssh2
+Jan 10 16:02:00 fin-ws-04 sshd[67890]: Failed password for invalid user oracle from 10.0.0.55 port 47003 ssh2
+Jan 10 16:03:00 fin-ws-04 sshd[67890]: Failed password for invalid user oracle from 10.0.0.55 port 47004 ssh2
+Jan 10 16:04:00 fin-ws-04 sshd[67890]: Failed password for invalid user oracle from 10.0.0.55 port 47005 ssh2
+Oct 10 08:00:00 demo-linux-01 sshd[1001]: Accepted password for alice from 192.168.1.10 port 22 ssh2
+Oct 10 08:15:00 demo-linux-01 sshd[1002]: Accepted publickey for bob from 192.168.1.11 port 22 ssh2
+Oct 10 08:30:00 demo-linux-01 sshd[1003]: Failed password for charlie from 192.168.1.12 port 22 ssh2
+Oct 10 08:45:00 demo-linux-01 sshd[1004]: Accepted password for charlie from 192.168.1.12 port 22 ssh2
+Oct 10 09:00:00 demo-linux-01 sudo: pam_unix(sudo:session): session opened for user alice by (uid=0)
+Oct 10 09:15:00 demo-linux-01 sshd[1005]: Accepted password for david from 192.168.1.15 port 22 ssh2
+Oct 10 09:30:00 demo-linux-01 sshd[1006]: Failed password for invalid user test from 192.168.1.20 port 22 ssh2
+Oct 10 09:45:00 demo-linux-01 sshd[1007]: Accepted password for sarah from 192.168.1.25 port 22 ssh2
+
+Oct 10 10:00:00 demo-linux-01 sshd[2001]: Failed password for root from 198.51.100.42 port 22 ssh2
+Oct 10 10:00:30 demo-linux-01 sshd[2002]: Failed password for root from 198.51.100.42 port 22 ssh2
+Oct 10 10:01:00 demo-linux-01 sshd[2003]: Failed password for admin from 198.51.100.42 port 22 ssh2
+Oct 10 10:01:30 demo-linux-01 sshd[2004]: Failed password for ubuntu from 198.51.100.42 port 22 ssh2
+Oct 10 10:02:00 demo-linux-01 sshd[2005]: Failed password for test from 198.51.100.42 port 22 ssh2
+Oct 10 10:02:30 demo-linux-01 sshd[2006]: Failed password for oracle from 198.51.100.42 port 22 ssh2
+Oct 10 10:03:00 demo-linux-01 sshd[2007]: Failed password for postgres from 198.51.100.42 port 22 ssh2
+Oct 10 10:03:30 demo-linux-01 sshd[2008]: Failed password for root from 198.51.100.42 port 22 ssh2
+Oct 10 10:04:00 demo-linux-01 sshd[2009]: Accepted password for root from 198.51.100.42 port 22 ssh2
+Oct 10 10:05:00 demo-linux-01 sudo: pam_unix(sudo:session): session opened for user root by (uid=0)
+Oct 10 10:06:00 demo-linux-01 sudo: pam_unix(sudo:session): session opened for user root by (uid=0)
+
+Oct 10 11:00:00 demo-linux-01 sshd[3001]: Failed password for sarah from 185.220.101.5 port 22 ssh2
+Oct 10 11:01:00 demo-linux-01 sshd[3002]: Failed password for sarah from 185.220.101.5 port 22 ssh2
+Oct 10 11:02:00 demo-linux-01 sshd[3003]: Accepted password for sarah from 185.220.101.5 port 22 ssh2
+Oct 10 11:05:00 demo-linux-01 sudo: pam_unix(sudo:session): session opened for user sarah by (uid=1001)
+
+Oct 10 12:00:00 demo-linux-01 sshd[4001]: Failed password for admin from 203.0.113.99 port 22 ssh2
+Oct 10 12:01:00 demo-linux-01 sshd[4002]: Failed password for admin from 203.0.113.99 port 22 ssh2
+Oct 10 12:02:00 demo-linux-01 sshd[4003]: Failed password for admin from 203.0.113.99 port 22 ssh2
+Oct 10 12:03:00 demo-linux-01 sshd[4004]: Accepted password for admin from 192.168.1.50 port 22 ssh2
+Oct 10 12:10:00 demo-linux-01 sshd[4005]: Accepted password for alice from 192.168.1.10 port 22 ssh2
+Oct 10 12:15:00 demo-linux-01 sshd[4006]: Failed password for bob from 192.168.1.11 port 22 ssh2
+Oct 10 12:20:00 demo-linux-01 sshd[4007]: Accepted password for bob from 192.168.1.11 port 22 ssh2

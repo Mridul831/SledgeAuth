@@ -72,6 +72,30 @@ def detect_brute_force(events: List[NormalizedEvent], threshold: int = 5, window
                     status=AlertStatus.OPEN
                 )
                 alerts.append(alert)
-                break # Avoid duplicate alerts for the same IP in the same window
+                break 
                 
+    return alerts
+
+def detect_privileged_activity(events: List[NormalizedEvent]) -> List[Alert]:
+    """
+    Detects any privileged activity (sudo/su) as a separate informational alert.
+    """
+    alerts = []
+    for event in events:
+        if event.event_type == EventType.PRIVILEGE_CHANGE:
+            alert = Alert(
+                alert_id=f"ALERT-{str(uuid.uuid4())[:8].upper()}",
+                timestamp=event.timestamp,
+                host=event.host,
+                rule_name="PRIVILEGED_ACTIVITY",
+                event_type=EventType.PRIVILEGE_CHANGE,
+                source_ip=event.source_ip,
+                event_count=1,
+                severity="Low", # Standalone privileged activity starts as Low
+                risk_score=20,  # Base score for privileged activity
+                evidence=[f"Privileged activity detected: {event.message}"],
+                mitre_attack="T1548", # Abuse Elevation Control Mechanism
+                status=AlertStatus.OPEN
+            )
+            alerts.append(alert)
     return alerts

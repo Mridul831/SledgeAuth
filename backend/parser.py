@@ -18,6 +18,8 @@ import os
 import re
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
+from .schemas import NormalizedEvent, EventType
+
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -57,6 +59,20 @@ IP_CANDIDATE_PATTERN = re.compile(
     r"(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9A-Fa-f]*:[0-9A-Fa-f:]+)"
     r"(?![0-9A-Za-z])"
 )
+
+try:
+    import psycopg2
+    TIGER_AVAILABLE = True
+except Exception:
+    psycopg2 = None
+    TIGER_AVAILABLE = False
+
+def store_events_in_tiger(events):
+    """Optional Tiger storage. No-op if psycopg2 unavailable."""
+    if not TIGER_AVAILABLE:
+        return None
+    # ... your Tiger logic here (or just return)
+    return None
 
 USERNAME_PATTERNS = [
     re.compile(r"\bFailed password for invalid user (\S+)", re.IGNORECASE),

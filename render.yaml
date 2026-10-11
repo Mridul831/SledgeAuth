@@ -1,0 +1,34 @@
+# SledgeAuth/render.yaml
+services:
+  # Backend Service (FastAPI)
+  - type: web
+    name: sledgeauth-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: OPENAI_API_KEY
+        sync: false # Render will prompt you for this secret in the dashboard
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # Frontend Service (Streamlit)
+  - type: web
+    name: sledgeauth-frontend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r frontend/requirements.txt
+    startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: API_BASE_URL
+        fromService:
+          name: sledgeauth-backend
+          type: web
+          property: host
+      - key: USE_MOCK
+        value: "false"

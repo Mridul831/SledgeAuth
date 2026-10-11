@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+
+# Environment files (NEVER COMMIT THESE)
+.env
+.env.local
+.env.*.local
+.secrets/
+
+# Databases
+*.sqlite3
+*.db
+
+# Node (if you ever use React again)
+node_modules/
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (NEVER COMMIT THESE)
+*.key
+*.pem
+
+# Render
+.render/

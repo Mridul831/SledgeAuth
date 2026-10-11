@@ -31,7 +31,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
 # Parser + Tiger Data storage
-from parser import parse_auth_logs, store_events_in_tiger
+from .parser import parse_auth_logs, store_events_in_tiger
 
 from detection import (
     detect_brute_force,

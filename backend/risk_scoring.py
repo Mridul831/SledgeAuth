@@ -1,4 +1,4 @@
-from schemas import Severity
+from .schemas import Severity
 
 def calculate_risk_score(event_count: int, has_corroborating_login: bool, has_privileged_activity: bool) -> tuple[int, Severity]:
     """

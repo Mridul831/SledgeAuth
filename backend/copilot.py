@@ -9,7 +9,7 @@ import os
 import ollama
 from fastapi import APIRouter, HTTPException
 
-from schemas import CopilotAnalyzeRequest, CopilotAnalyzeResponse
+from .schemas import CopilotAnalyzeRequest, CopilotAnalyzeResponse
 
 router = APIRouter()
 

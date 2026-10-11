@@ -9,8 +9,8 @@ Supported input:
 
 Returns normalized events matching backend/schemas.py.
 
-Also stores events in Tiger Data (PostgreSQL + TimescaleDB) when
-TIGER_DATA_URL is configured.
+Also optionally stores events in Tiger Data (PostgreSQL + TimescaleDB)
+when TIGER_DATA_URL is configured AND psycopg2 is installed.
 """
 
 import ipaddress
@@ -18,18 +18,26 @@ import os
 import re
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
-from .schemas import NormalizedEvent, EventType
 
-
-import psycopg2
-from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 
-from schemas import EventType, NormalizedEvent
+from .schemas import EventType, NormalizedEvent
 
 load_dotenv()
 
 TIGER_DATA_URL = os.getenv("TIGER_DATA_URL", "")
+
+# ============================================================
+# TIGER / POSTGRESQL — OPTIONAL IMPORT (safe on Render)
+# ============================================================
+try:
+    import psycopg2
+    from psycopg2.extras import execute_values
+    TIGER_AVAILABLE = True
+except ImportError:
+    psycopg2 = None
+    execute_values = None
+    TIGER_AVAILABLE = False
 
 
 # ============================================================
@@ -59,20 +67,6 @@ IP_CANDIDATE_PATTERN = re.compile(
     r"(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9A-Fa-f]*:[0-9A-Fa-f:]+)"
     r"(?![0-9A-Za-z])"
 )
-
-try:
-    import psycopg2
-    TIGER_AVAILABLE = True
-except Exception:
-    psycopg2 = None
-    TIGER_AVAILABLE = False
-
-def store_events_in_tiger(events):
-    """Optional Tiger storage. No-op if psycopg2 unavailable."""
-    if not TIGER_AVAILABLE:
-        return None
-    # ... your Tiger logic here (or just return)
-    return None
 
 USERNAME_PATTERNS = [
     re.compile(r"\bFailed password for invalid user (\S+)", re.IGNORECASE),
@@ -107,10 +101,6 @@ def parse_timestamp(
 ) -> Optional[Tuple[datetime, str, str]]:
     """
     Extract timestamp, host, and message from a supported log line.
-
-    Traditional syslog records have no year or timezone. For this prototype,
-    their year is assumed to be the current UTC year and their timestamp is
-    interpreted as UTC.
     """
     iso_match = ISO_SYSLOG_PATTERN.match(line)
 
@@ -292,7 +282,7 @@ def parse_auth_logs(
 
 
 # ============================================================
-# TIGER DATA — STORE EVENTS (PostgreSQL + TimescaleDB)
+# TIGER DATA — STORE EVENTS (OPTIONAL)
 # ============================================================
 
 def _event_to_dict(e):
@@ -307,9 +297,10 @@ def _event_to_dict(e):
 def store_events_in_tiger(events) -> bool:
     """
     Store normalized events in Tiger Data (PostgreSQL + TimescaleDB).
-    Auto-creates the hypertable on first call.
-    Returns True on success, False otherwise.
+    No-op if psycopg2 is unavailable or TIGER_DATA_URL is not configured.
     """
+    if not TIGER_AVAILABLE or psycopg2 is None:
+        return False
     if not TIGER_DATA_URL:
         print("[Tiger Data] TIGER_DATA_URL not configured — skipping")
         return False
@@ -360,15 +351,17 @@ def store_events_in_tiger(events) -> bool:
             )
             conn.commit()
         conn.close()
-        print(f"[Tiger Data] ✅ Stored {len(rows)} events")
+        print(f"[Tiger Data] Stored {len(rows)} events")
         return True
     except Exception as e:
-        print(f"[Tiger Data] ❌ Insert failed: {e}")
+        print(f"[Tiger Data] Insert failed: {e}")
         return False
 
 
 def get_event_count() -> int:
     """Return total events stored in Tiger Data."""
+    if not TIGER_AVAILABLE or psycopg2 is None:
+        return 0
     if not TIGER_DATA_URL:
         return 0
     try:
@@ -383,5 +376,5 @@ def get_event_count() -> int:
         return 0
 
 
-# Compatibility aliases for convenient reuse by the API layer.
+# Compatibility alias
 parse_file = parse_auth_logs

@@ -3,7 +3,6 @@ from datetime import timedelta
 from typing import List
 from .schemas import NormalizedEvent, Alert, EventType, AlertStatus
 from .risk_scoring import calculate_risk_score
-
 def detect_brute_force(events: List[NormalizedEvent], threshold: int = 5, window_minutes: int = 5) -> List[Alert]:
     """
     Detects brute force attacks: >= threshold login_failures from same IP within window_minutes.

@@ -2,12 +2,17 @@
 Member 3 — AI Copilot endpoint.
 Uses local Ollama LLM (offline). No cloud dependencies.
 """
-
 import json
 import os
 
-import ollama
 from fastapi import APIRouter, HTTPException
+
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    ollama = None
+    OLLAMA_AVAILABLE = False
 
 from .schemas import CopilotAnalyzeRequest, CopilotAnalyzeResponse
 
@@ -83,6 +88,10 @@ async def analyze_alert(request: CopilotAnalyzeRequest):
     alert = request.alert
 
     # Try Ollama (local)
+        # Try Ollama (local)
+    if not OLLAMA_AVAILABLE:
+        raise Exception("Ollama not installed on this server")
+
     try:
         client = ollama.Client(host=OLLAMA_HOST)
         prompt = _build_prompt(alert)

@@ -11,7 +11,7 @@ Member 2:
 - POST /api/detect
 
 Member 3:
-- POST /api/copilot/analyze (register when backend/copilot.py is available)
+- POST /api/copilot/analyze
 
 Tiger Data:
 - POST /api/logs/parse also stores normalized events in Tiger Data
@@ -30,14 +30,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
-# Parser + Tiger Data storage
+# Relative imports (required for cloud deployment)
 from .parser import parse_auth_logs, store_events_in_tiger
-
-from detection import (
+from .detection import (
     detect_brute_force,
     detect_privileged_activity,
 )
-from schemas import (
+from .schemas import (
     Alert,
     AlertStatus,
     AlertsResponse,
@@ -51,7 +50,7 @@ from schemas import (
 
 # Safely import the copilot router so the backend doesn't crash if Member 3 hasn't pushed yet
 try:
-    from copilot import router as copilot_router
+    from .copilot import router as copilot_router
 except ImportError:
     copilot_router = None
 
@@ -66,7 +65,7 @@ app = FastAPI(
 if copilot_router:
     app.include_router(copilot_router)
 
-# Allow local frontends (React on 5173, Streamlit on 8501) to communicate with this API.
+# CORS — allow local frontends (React 5173, Streamlit 8501) + deployed Streamlit Cloud
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -74,6 +73,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:8501",
         "http://127.0.0.1:8501",
+        "https://*.streamlit.app",  # Streamlit Community Cloud
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -84,6 +84,12 @@ app.add_middleware(
 ALERTS: Dict[str, Alert] = {}
 
 MAX_LOG_BYTES = 2 * 1024 * 1024  # 2 MB
+
+
+@app.get("/")
+async def root():
+    """Welcome endpoint."""
+    return {"message": "SledgeAuth API is live. Visit /docs for the interactive UI."}
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -207,22 +213,17 @@ async def parse_logs(request: Request) -> NormalizedEventResponse:
 def run_detection(request: DetectRequest) -> DetectResponse:
     """
     Run the deterministic detection rules on normalized events.
-
-    Member 2 owns the detection functions and their scoring logic.
-    Detected alerts are stored so the alerts API can retrieve them.
     """
     brute_force_alerts = detect_brute_force(request.events)
     privileged_alerts = detect_privileged_activity(request.events)
 
     detected_alerts = brute_force_alerts + privileged_alerts
 
-    # Normalize alert objects and dictionaries to the shared Alert schema.
     validated_alerts = [
         alert if isinstance(alert, Alert) else Alert.model_validate(alert)
         for alert in detected_alerts
     ]
 
-    # Keep alert retrieval and status updates synchronized with detection.
     for alert in validated_alerts:
         ALERTS[alert.alert_id] = alert
 
@@ -252,9 +253,7 @@ async def update_alert_status(
             detail=f"Alert '{alert_id}' was not found.",
         )
 
-    updated_alert = alert.model_copy(
-        update={"status": payload.status}
-    )
+    updated_alert = alert.model_copy(update={"status": payload.status})
     ALERTS[alert_id] = updated_alert
 
     return updated_alert
@@ -266,30 +265,17 @@ async def update_alert_status(
 
 @app.get("/api/trends")
 async def get_trends():
-    """
-    Return alert trends for the last 24 hours.
-
-    Aggregates the in-memory alerts into hourly buckets.
-    The response shape matches what the frontend expects:
-      {
-        "hours": ["00", "01", ..., "23"],
-        "alerts": [int, int, ...],
-        "critical": [int, int, ...]
-      }
-    """
+    """Return alert trends for the last 24 hours."""
     from datetime import datetime, timedelta, timezone
 
-    # Build 24 hourly buckets (oldest → newest)
     now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
     hours_list = [(now - timedelta(hours=i)) for i in range(23, -1, -1)]
 
-    # Initialize buckets — key = "HH" string
     buckets = {}
     for h in hours_list:
         key = h.strftime("%H")
         buckets[key] = {"alerts": 0, "critical": 0}
 
-    # Count alerts into their hourly buckets
     for alert in ALERTS.values():
         ts_value = (
             getattr(alert, "first_seen", None)
@@ -315,10 +301,8 @@ async def get_trends():
                 if severity == "Critical" or str(severity) == "Critical":
                     buckets[hour_key]["critical"] += 1
         except Exception:
-            # Skip alerts with unparseable timestamps
             continue
 
-    # Build response preserving bucket order
     ordered_hours = [h.strftime("%H") for h in hours_list]
     return {
         "hours": ordered_hours,
@@ -333,10 +317,7 @@ async def get_trends():
 
 @app.delete("/api/alerts")
 async def clear_alerts():
-    """
-    Clear all in-memory alerts.
-    Useful for testing and demo resets.
-    """
+    """Clear all in-memory alerts."""
     count = len(ALERTS)
     ALERTS.clear()
     return {

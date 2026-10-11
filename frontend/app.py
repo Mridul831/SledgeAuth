@@ -82,7 +82,7 @@ with st.sidebar:
 
     st.divider()
     st.markdown("### Quick Actions")
-    if st.button("🔄 Refresh Alerts", use_container_width=True):
+    if st.button("🔄 Refresh Alerts", width="stretch"):
         alerts, err = get_alerts()
         new_alerts = alerts if isinstance(alerts, list) else []
         if len(new_alerts) > st.session_state.last_alert_count:
@@ -162,7 +162,7 @@ if page == "Dashboard":
                 data=build_all_alerts_pdf(alerts),
                 file_name=f"soc_all_alerts_{time.strftime('%Y%m%d_%H%M')}.pdf",
                 mime="application/pdf",
-                use_container_width=True,
+                width="stretch",
             )
         with ec2:
             st.download_button(
@@ -170,7 +170,7 @@ if page == "Dashboard":
                 data=build_all_alerts_json(alerts),
                 file_name=f"soc_all_alerts_{time.strftime('%Y%m%d_%H%M')}.json",
                 mime="application/json",
-                use_container_width=True,
+                width="stretch",
             )
         with ec3:
             st.download_button(
@@ -178,7 +178,7 @@ if page == "Dashboard":
                 data=build_all_alerts_markdown(alerts),
                 file_name=f"soc_all_alerts_{time.strftime('%Y%m%d_%H%M')}.md",
                 mime="text/markdown",
-                use_container_width=True,
+                width="stretch",
             )
     else:
         st.caption("No alerts to export yet.")
@@ -273,7 +273,7 @@ if page == "Dashboard":
 
         with det_mid:
             st.markdown("**AI Investigation Guidance**")
-            if st.button("🤖 Run AI Analysis", use_container_width=True):
+            if st.button("🤖 Run AI Analysis", width="stretch"):
                 with st.spinner("🧠 AI analyzing... (first call ~10s)"):
                     result, err3 = analyze_alert(alert)
                     st.session_state.ai_result = result
@@ -335,7 +335,7 @@ elif page == "Upload Logs":
 
     with c1:
         if st.button(
-            "Parse Logs", disabled=uploaded is None, use_container_width=True
+            "Parse Logs", disabled=uploaded is None, width="stretch"
         ):
             if uploaded:
                 with st.spinner("Parsing logs..."):
@@ -356,7 +356,7 @@ elif page == "Upload Logs":
                     )
 
     with c2:
-        if st.button("Run Detection", use_container_width=True):
+        if st.button("Run Detection", width="stretch"):
             events = st.session_state.get("parsed_events", [])
             if not events:
                 st.warning(
